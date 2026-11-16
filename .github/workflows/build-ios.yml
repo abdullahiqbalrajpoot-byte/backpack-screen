@@ -1,4 +1,4 @@
-name: Build iOS App (IPA)
+name: Build iOS App
 
 on:
   push:
@@ -13,12 +13,24 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v4
 
-    - name: Build iOS Application (Unsigned IPA)
+    - name: Build for Simulator (Appetize.io)
       run: |
-        if [ -d "ios-app" ]; then
-          cd ios-app
-        fi
-        
+        cd ios-app
+        xcodebuild -project SleepysBackscreen.xcodeproj \
+          -scheme SleepysBackscreen \
+          -configuration Debug \
+          -destination 'generic/platform=iOS Simulator' \
+          CODE_SIGNING_ALLOWED=NO \
+          CODE_SIGNING_REQUIRED=NO \
+          CODE_SIGN_IDENTITY="" \
+          CONFIGURATION_BUILD_DIR=build/Debug-iphonesimulator \
+          clean build
+        cd build/Debug-iphonesimulator
+        zip -r ../../SleepysBackscreen-Simulator-Appetize.zip SleepysBackscreen.app
+
+    - name: Build for Real iPhone (IPA)
+      run: |
+        cd ios-app
         xcodebuild -project SleepysBackscreen.xcodeproj \
           -scheme SleepysBackscreen \
           -configuration Release \
@@ -28,15 +40,18 @@ jobs:
           CODE_SIGN_IDENTITY="" \
           CONFIGURATION_BUILD_DIR=build/Release-iphoneos \
           clean build
-
-        # Package into IPA
         mkdir -p Payload
         cp -r build/Release-iphoneos/SleepysBackscreen.app Payload/
         zip -r SleepysBackscreen.ipa Payload
 
-    - name: Upload IPA Artifact
+    - name: Upload Appetize Simulator Zip
+      uses: actions/upload-artifact@v4
+      with:
+        name: SleepysBackscreen-Simulator-Appetize
+        path: ios-app/SleepysBackscreen-Simulator-Appetize.zip
+
+    - name: Upload Real iPhone IPA
       uses: actions/upload-artifact@v4
       with:
         name: SleepysBackscreen-iOS-IPA
-        path: |
-          **/SleepysBackscreen.ipa
+        path: ios-app/SleepysBackscreen.ipa
