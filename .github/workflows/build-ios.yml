@@ -13,6 +13,15 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v4
 
+    - name: Unpack Updated Code
+      run: |
+        if [ -f "smart-backpack-ios-github.zip" ]; then
+          echo "Extracting updated source from smart-backpack-ios-github.zip..."
+          rm -rf ios-app
+          mkdir -p ios-app
+          unzip -o smart-backpack-ios-github.zip -d ios-app
+        fi
+
     - name: Build for Simulator (Appetize.io)
       run: |
         cd ios-app
@@ -28,7 +37,7 @@ jobs:
         cd build/Debug-iphonesimulator
         zip -r ../../SleepysBackscreen-Simulator-Appetize.zip SleepysBackscreen.app
 
-    - name: Build for Real iPhone (IPA)
+    - name: Build for Real iPhone / iPad (IPA)
       run: |
         cd ios-app
         xcodebuild -project SleepysBackscreen.xcodeproj \
@@ -50,7 +59,7 @@ jobs:
         name: SleepysBackscreen-Simulator-Appetize
         path: ios-app/SleepysBackscreen-Simulator-Appetize.zip
 
-    - name: Upload Real iPhone IPA
+    - name: Upload Real iPhone / iPad IPA
       uses: actions/upload-artifact@v4
       with:
         name: SleepysBackscreen-iOS-IPA
